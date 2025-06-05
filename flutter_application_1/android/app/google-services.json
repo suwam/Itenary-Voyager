@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "858113696272",
+    "project_id": "itinerary-voyager",
+    "storage_bucket": "itinerary-voyager.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:858113696272:android:2668505633438fe188a095",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDw8lLnv_dpPH1g4QAEYneV_EahRXRz2Wk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
