@@ -1,23 +1,24 @@
 name: travel_app
 description: A new Flutter project.
 publish_to: 'none'
-
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.2
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
   provider: ^6.0.5
-  http: ^0.13.5
+  http: ^0.13.6
   google_maps_flutter: ^2.1.1
   carousel_slider: ^4.1.1
-  firebase_core: ^2.27.0      # ✅ latest compatible
-  firebase_auth: ^4.17.0      # ✅ matches firebase_core
+  firebase_core: ^2.27.0
+  firebase_auth: ^4.17.0
   google_place: ^0.4.7
+  intl: ^0.18.1
+  animated_text_kit: ^4.2.2  # ✅ Added for typing effect
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +29,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/image/thamel.jpg
+    - assets/image/thamel.JPG
     - assets/image/patan.webp
     - assets/image/bouddha.jpg
+    

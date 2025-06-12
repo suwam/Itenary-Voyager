@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../controller/itinerary_controller.dart';
 
@@ -13,10 +11,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final inputController = TextEditingController();
-  bool loading = false;
-  String placeInfo = '';
-
   final PageController _pageController = PageController();
   int _currentPage = 0;
   Timer? _sliderTimer;
@@ -49,41 +43,6 @@ class _HomePageState extends State<HomePage> {
     _sliderTimer?.cancel();
     _pageController.dispose();
     super.dispose();
-  }
-
-  Future<void> fetchPlaceDetails(String query) async {
-    setState(() {
-      loading = true;
-      placeInfo = '';
-    });
-
-    const apiKey = 'YOUR_GOOGLE_PLACES_API_KEY'; // Replace this
-    final url =
-        'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$query&key=$apiKey';
-
-    try {
-      final response = await http.get(Uri.parse(url));
-      final data = json.decode(response.body);
-
-      if (data['status'] == 'OK' && data['results'].isNotEmpty) {
-        final result = data['results'][0];
-        setState(() {
-          placeInfo = result['name'] +
-              "\n" +
-              (result['formatted_address'] ?? 'No address available');
-        });
-      } else {
-        setState(() {
-          placeInfo = 'No place details found.';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        placeInfo = 'Error fetching details: $e';
-      });
-    } finally {
-      setState(() => loading = false);
-    }
   }
 
   void _showProfileMenu() {
@@ -142,6 +101,10 @@ class _HomePageState extends State<HomePage> {
             child: const Text("About Us", style: TextStyle(color: Colors.white)),
           ),
           TextButton(
+            onPressed: () => Navigator.pushNamed(context, '/chat'),
+            child: const Text("Chat", style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
             onPressed: () => Navigator.pushReplacementNamed(context, '/contact'),
             child: const Text("Contact Us", style: TextStyle(color: Colors.white)),
           ),
@@ -173,47 +136,15 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.all(12),
             child: Column(
               children: [
-                TextField(
-                  controller: inputController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    hintText: "Type 'Patan', 'Thamel' or ask a place...",
-                    hintStyle: TextStyle(color: Colors.white70),
-                    filled: true,
-                    fillColor: Colors.black54,
-                    border: OutlineInputBorder(),
-                  ),
-                  onSubmitted: controller.handleInput,
-                ),
                 const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () async {
-                    final input = inputController.text.trim();
-                    if (input.isNotEmpty) {
-                      await fetchPlaceDetails(input);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 155, 100, 107),
-                  ),
-                  child: loading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Search Google Places"),
-                ),
-                const SizedBox(height: 10),
-                if (placeInfo.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.only(bottom: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(placeInfo),
-                  ),
                 Expanded(
                   child: controller.filteredPOIs.isEmpty
-                      ? const SizedBox.shrink()
+                      ? const Center(
+                          child: Text(
+                            "No POIs available.",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        )
                       : ListView.builder(
                           itemCount: controller.filteredPOIs.length,
                           itemBuilder: (context, index) {

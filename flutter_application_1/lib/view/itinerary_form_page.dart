@@ -1,133 +1,165 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../utils/itinerary_generator.dart';
+import 'itinerary_summary_page.dart';
 
-class ItinerarySummaryPage extends StatelessWidget {
-  final String from;
-  final String to;
-  final String cost;
-  final String travelDate;
-  final String returnDate;
 
-  const ItinerarySummaryPage({
-    super.key,
-    required this.from,
-    required this.to,
-    required this.cost,
-    required this.travelDate,
-    required this.returnDate,
-  });
+class ItineraryFormPage extends StatefulWidget {
+  const ItineraryFormPage({super.key});
+
+  @override
+  State<ItineraryFormPage> createState() => _ItineraryFormPageState();
+}
+
+class _ItineraryFormPageState extends State<ItineraryFormPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  final destinationController = TextEditingController();
+  final interestsController = TextEditingController();
+  final travelDateController = TextEditingController();
+  final returnDateController = TextEditingController();
+  final durationController = TextEditingController();
+  final costController = TextEditingController();
+
+  String? selectedTransport;
+  final List<String> transportOptions = ['Bus', 'Car', 'Flight', 'Bike', 'Other'];
+
+  @override
+  void dispose() {
+    destinationController.dispose();
+    interestsController.dispose();
+    travelDateController.dispose();
+    returnDateController.dispose();
+    durationController.dispose();
+    costController.dispose();
+    super.dispose();
+  }
+
+  void submitForm() {
+    if (_formKey.currentState!.validate() && selectedTransport != null) {
+      final generatedPlan = generateManualPlan(
+        destination: destinationController.text.trim(),
+        duration: durationController.text.trim(),
+        preferences: interestsController.text
+            .split(',')
+            .map((e) => e.trim().toLowerCase())
+            .where((e) => e.isNotEmpty)
+            .toList(),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ItinerarySummaryPage(
+            destination: destinationController.text.trim(),
+            travelDate: travelDateController.text.trim(),
+            returnDate: returnDateController.text.trim(),
+            duration: durationController.text.trim(),
+            cost: costController.text.trim(),
+            transport: selectedTransport!,
+            preferences: interestsController.text
+                .split(',')
+                .map((e) => e.trim())
+                .toList(),
+            description: interestsController.text.trim(),
+            aiResponse: generatedPlan,
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> selectDate(BuildContext context, TextEditingController controller) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      controller.text = DateFormat('yyyy-MM-dd').format(picked);
+    }
+  }
+
+  Widget buildTextField(String label, TextEditingController controller,
+      {String? hint, bool isDate = false, int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: GestureDetector(
+        onTap: isDate ? () => selectDate(context, controller) : null,
+        child: AbsorbPointer(
+          absorbing: isDate,
+          child: TextFormField(
+            controller: controller,
+            maxLines: maxLines,
+            decoration: InputDecoration(
+              labelText: label,
+              hintText: hint,
+              border: const OutlineInputBorder(),
+              suffixIcon: isDate ? const Icon(Icons.calendar_today) : null,
+            ),
+            validator: (value) =>
+                value == null || value.trim().isEmpty ? 'Required field' : null,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildTransportDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonFormField<String>(
+        value: selectedTransport,
+        decoration: const InputDecoration(
+          labelText: "Transport",
+          border: OutlineInputBorder(),
+        ),
+        items: transportOptions.map((option) {
+          return DropdownMenuItem(value: option, child: Text(option));
+        }).toList(),
+        onChanged: (value) => setState(() => selectedTransport = value),
+        validator: (value) =>
+            value == null || value.isEmpty ? 'Please select transport' : null,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Planned Itinerary"),
-        backgroundColor: Colors.teal,
+        title: const Text('Itinerary Form'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "⚠️ This is a tentative itinerary, so please be flexible.",
-              style: TextStyle(
-                color: Colors.pink,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              buildTextField("Destination", destinationController),
+              buildTextField("Travel Interests", interestsController,
+                  hint: "e.g., religious, sightseeing, food", maxLines: 3),
+              buildTextField("Travel Date", travelDateController,
+                  hint: "YYYY-MM-DD", isDate: true),
+              buildTextField("Return Date", returnDateController,
+                  hint: "YYYY-MM-DD", isDate: true),
+              buildTextField("Duration", durationController,
+                  hint: "e.g., 2 days or 6 hours"),
+              buildTextField("Estimated Cost (NPR)", costController),
+              buildTransportDropdown(),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: submitForm,
+                child: const Text("Generate Itinerary"),
               ),
-            ),
-            const SizedBox(height: 20),
-
-            _infoRow("From", from),
-            _infoRow("To", to),
-            _infoRow("Estimated Cost (NPR)", cost),
-            _infoRow("Travel Date", travelDate),
-            _infoRow("Return Date", returnDate),
-
-            const SizedBox(height: 30),
-            const Text("🗓 Day-wise Plan", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-
-            _dayPlan(
-              day: "Day 1",
-              items: [
-                "Arrival in $from and check-in at hotel.",
-                "Evening walk around local area.",
-                "Try some street food or a popular local restaurant.",
-              ],
-            ),
-            _dayPlan(
-              day: "Day 2",
-              items: [
-                "Morning visit to historical monuments or temples in $from.",
-                "Afternoon cultural activity or museum.",
-                "Evening market exploration or local crafts.",
-              ],
-            ),
-            _dayPlan(
-              day: "Day 3",
-              items: [
-                "Travel from $from to $to.",
-                "Check-in at hotel in $to.",
-                "Short visit to a famous site nearby.",
-              ],
-            ),
-            _dayPlan(
-              day: "Day 4",
-              items: [
-                "Full day sightseeing in $to.",
-                "Evening rest or enjoy local entertainment.",
-              ],
-            ),
-            _dayPlan(
-              day: "Day 5",
-              items: [
-                "Free time for personal activities or shopping.",
-                "Pack and prepare for return on $returnDate.",
-              ],
-            ),
-            const Divider(height: 40),
-            const Text(
-              "Note: This plan is generated based on your input. Adjust based on weather, preferences, and availability.",
-              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _infoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("$label: ",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 16))),
-        ],
-      ),
-    );
-  }
-
-  Widget _dayPlan({required String day, required List<String> items}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(day, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          ...items.map((item) => Padding(
-                padding: const EdgeInsets.only(left: 12, bottom: 2),
-                child: Text("• $item", style: const TextStyle(fontSize: 14)),
-              )),
-        ],
       ),
     );
   }
