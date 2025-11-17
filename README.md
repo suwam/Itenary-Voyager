@@ -51,9 +51,11 @@ User enters travel preferences.
 
 The system fetches coordinates using Geocoding API.
 
-A* algorithm computes the scenic route based on distance[Major Project for the Bachelor in Computer Engineering.docx](https://github.com/user-attachments/files/23572825/Major.Project.for.the.Bachelor.in.Computer.Engineering.docx)
+A* algorithm computes the scenic route based on distance
 , heuristic, and POIs.
 
 The itinerary is generated and stored in Firestore.
 
 The user views the itinerary along with a visual route on Google Maps.
+
+[Major Project for the Bachelor in Computer Engineering.docx](https://github.com/user-attachments/files/23572825/Major.Project.for.the.Bachelor.in.Computer.Engineering.docx)
